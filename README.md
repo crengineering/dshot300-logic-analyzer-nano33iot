@@ -20,8 +20,8 @@ telemetry. Development aid, not a calibrated instrument.
 - optional: the printed case in `case/`
 
 <p>
-  <img src="3d_printed_case.jpg" width="49%" alt="Printed case: two-colour lid with header slots, pin marks 1-4/T and GND dots">
   <img src="case/la_case_preview.png" width="49%" alt="CAD preview: assembled case, open base with locating pins, USB end">
+  <img src="3d_printed_case.jpg" width="49%" alt="Printed case: two-colour lid with header slots, pin marks 1-4/T and GND dots">
 </p>
 
 All five inputs must stay at 3.3 V levels. DShot lines from a 3.3 V flight
