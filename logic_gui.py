@@ -9,8 +9,9 @@ Usage:
 Features: stacked digital traces (zoom/pan via the matplotlib toolbar, mouse wheel
 zooms around the pointer), two cursors (left click = A, right click = B, delta in
 the status line), per-channel pulse statistics, DShot300 frame decoder (throttle,
-telemetry bit, CRC check, measured bit period / T0H / T1H; per-channel "inv" for
-bidirectional DShot: idle high, low pulses, inverted CRC) and a UART 8N1 decoder
+telemetry bit, CRC check, measured bit period / T0H / T1H; one "Bidir DShot"
+switch for bidirectional DShot: idle high, low pulses, inverted CRC, reply
+decoder) and a UART 8N1 decoder
 with KISS-telemetry packet check (CRC-8, temperature/U/I/mAh/eRPM). Captures
 save/load as JSON.
 
@@ -521,6 +522,8 @@ def run_gui(path=None):
             self.trig_edge = ttk.Combobox(top, width=14, values=["frame start", "frame start inv", "rising", "falling", "any", "none"], state="readonly")
             self.trig_edge.current(0)
             self.trig_edge.pack(side="left", padx=2)
+            self.bidir_var = tk.BooleanVar(value=False)
+            ttk.Checkbutton(top, text="Bidir DShot", variable=self.bidir_var, command=self.bidir_changed).pack(side="left", padx=(4, 0))
             ttk.Label(top, text="Samples").pack(side="left", padx=(6, 0))
             self.len_var = tk.IntVar(value=20000)
             ttk.Spinbox(top, from_=16, to=20000, increment=1000, width=7, textvariable=self.len_var).pack(side="left")
@@ -547,7 +550,7 @@ def run_gui(path=None):
 
             chf = ttk.Frame(root, padding=(4, 0))
             chf.pack(fill="x")
-            self.name_vars, self.dec_cbs, self.inv_vars = [], [], []
+            self.name_vars, self.dec_cbs = [], []
             for i in range(N_CH):
                 ttk.Label(chf, text=f"CH{i}").pack(side="left", padx=(8, 2))
                 nv = tk.StringVar(value=DEFAULT_NAMES[i])
@@ -556,9 +559,6 @@ def run_gui(path=None):
                 cb.set(DEFAULT_DECODERS[i])
                 cb.pack(side="left")
                 cb.bind("<<ComboboxSelected>>", lambda e: self.render())
-                iv = tk.BooleanVar(value=False)
-                ttk.Checkbutton(chf, text="inv", variable=iv, command=self.render).pack(side="left", padx=(2, 0))
-                self.inv_vars.append(iv)
                 nv.trace_add("write", lambda *a: self.render())
                 self.name_vars.append(nv)
                 self.dec_cbs.append(cb)
@@ -640,6 +640,14 @@ def run_gui(path=None):
             if self.ser:
                 self.ser.write((cmd + "\n").encode("ascii"))
 
+        def bidir_changed(self):
+            # keep the frame-start trigger consistent with the line polarity, then re-decode
+            swap = {"frame start": "frame start inv", "frame start inv": "frame start"}
+            cur = self.trig_edge.get()
+            if cur in swap and (cur == "frame start inv") != self.bidir_var.get():
+                self.trig_edge.set(swap[cur])
+            self.render()
+
         def capture(self):
             edge = {"frame start": "F", "frame start inv": "I", "rising": "r", "falling": "f", "any": "a", "none": "n"}[self.trig_edge.get()]
             self.send(f"t{self.trig_ch.current()}{edge}")
@@ -716,7 +724,7 @@ def run_gui(path=None):
                 report.append(line)
                 dec = self.dec_cbs[ch].get()
                 if dec == "DShot":
-                    inv = self.inv_vars[ch].get()
+                    inv = self.bidir_var.get()
                     frames = decode_dshot(tr, cap.t_end_us, inverted=inv)
                     replies = decode_bidir(tr, cap.t_end_us, frames) if inv else []
                     spans = [(r["t0"], r["t1"]) for r in replies if "t1" in r]
@@ -736,13 +744,13 @@ def run_gui(path=None):
                         if "error" in f:
                             label = f"? {f['error']}"
                             color = "orange"
-                            report.append(f"    DShot{' inv' if inv else ''} @ {f['t0']:.2f} us: {f['error']}")
+                            report.append(f"    DShot{' bidir' if inv else ''} @ {f['t0']:.2f} us: {f['error']}")
                         else:
                             label = f"thr={f['throttle']} tlm={f['telem']} CRC {'ok' if f['crc_ok'] else 'FAIL'}"
                             color = "green" if f["crc_ok"] else "red"
                             t0h = f"{f['t0h_us']:.3f}" if f["t0h_us"] is not None else "-"
                             t1h = f"{f['t1h_us']:.3f}" if f["t1h_us"] is not None else "-"
-                            report.append(f"    DShot{' inv' if inv else ''} @ {f['t0']:.2f} us: raw=0x{f['raw']:04X} throttle={f['throttle']} "
+                            report.append(f"    DShot{' bidir' if inv else ''} @ {f['t0']:.2f} us: raw=0x{f['raw']:04X} throttle={f['throttle']} "
                                           f"telem={f['telem']} crc={f['crc']:X} {'ok' if f['crc_ok'] else 'FAIL'}  "
                                           f"bit={f['period_us']:.3f} us T0H={t0h} T1H={t1h} us")
                         self.ax.axvspan(f["t0"], f["t1"], ymin=(base) / (N_CH * pitch), ymax=(base + 1.2) / (N_CH * pitch),
@@ -888,7 +896,7 @@ def run_gui(path=None):
                 return
             p = filedialog.asksaveasfilename(defaultextension=".json", filetypes=[("capture", "*.json")])
             if p:
-                self.cap.meta["inv"] = "".join("1" if v.get() else "0" for v in self.inv_vars)
+                self.cap.meta["bidir"] = self.bidir_var.get()
                 with open(p, "w", encoding="utf-8") as fh:
                     json.dump(self.cap.to_json(), fh)
                 self.status.set(f"saved {p}")
@@ -901,8 +909,8 @@ def run_gui(path=None):
                 self.cap = Capture.from_json(json.load(fh))
             for v, nm in zip(self.name_vars, self.cap.names):
                 v.set(nm)
-            for v, c in zip(self.inv_vars, self.cap.meta.get("inv", "")):
-                v.set(c == "1")
+            # "bidir" is the current key; older captures stored a per-channel "inv" string
+            self.bidir_var.set(bool(self.cap.meta.get("bidir", "1" in self.cap.meta.get("inv", ""))))
             self.cursor = [None, None]
             self.render()
 

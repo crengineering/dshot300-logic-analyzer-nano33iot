@@ -67,12 +67,12 @@ python logic_gui.py --selftest      # run the decoders on synthetic frames, no h
 - The report lists every decoded frame: raw word, throttle, telemetry bit, CRC
   check, measured bit period, mean T0H and mean T1H. A frame with the wrong
   pulse count or a failed CRC is marked orange/red on the trace.
-- **Bidirectional DShot:** tick **inv** next to the channel's decoder. The
-  line then idles high and the bits are low pulses; the decoder swaps the
-  levels and checks the inverted CRC. Trigger with **frame start inv** (a
-  falling edge after at least ~100 µs of high). The inv ticks are saved with
-  the capture.
-- **Bidir reply decoder** (inv channels only): the first falling edge 5–150 µs
+- **Bidirectional DShot:** tick **Bidir DShot** in the top bar. All DShot
+  channels are then decoded as idle high with low pulses and the inverted CRC.
+  The trigger switches between **frame start** and **frame start inv** (a
+  falling edge after at least ~100 µs of high) with the tick. The setting is
+  saved with the capture.
+- **Bidir reply decoder** (with Bidir DShot on): the first falling edge 5–150 µs
   after each CRC-ok frame starts the ESC's reply. Decoded as AM32/BLHeli_32
   send it: NRZI (an edge on a slot boundary = GCR 1), 4b/5b GCR, 12 bit +
   inverted nibble-XOR CRC. The bit time starts at 2.667 µs (5/4 × DShot300)
