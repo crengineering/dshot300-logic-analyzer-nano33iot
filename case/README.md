@@ -35,6 +35,9 @@ outside without entering the case.
   the PCB's mounting holes from below. Drop the board onto them; this aligns the
   USB connector with the notch before the lid goes on. If the pins are too
   tight, sand them or set `pinD` to 1.2.
+- The ledge at the USB end is cut away under the socket, 11 mm wide
+  (`usbReliefW`) down to the floor, because the micro-USB shell's anchor tabs
+  stick out below the PCB there. Only two pin pads remain at that end.
 - Four **bosses** on the lid underside (2.2 mm wide, `bossW`) sit over the hole
   positions, from 0.7 mm inboard of the hole centre (`bossIn`) to the PCB end,
   and stop 0.3 mm above the PCB top (`bossGap`). They only limit lift, they do

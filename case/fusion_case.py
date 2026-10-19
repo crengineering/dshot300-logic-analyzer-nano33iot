@@ -21,6 +21,7 @@ P = dict(
     bossW=2.2, bossIn=0.7, bossGap=0.3,  # lid bosses over the holes: width (y), reach inboard of the hole centre (x), gap above the PCB top
     rowPitch=15.24, slotW=3.2, slotL=41.0,
     usbW=13.0, usbDown=2.5, usbOver=1.6, # notch width; notch bottom below PCB top; connector overhang beyond the PCB end
+    usbReliefW=11.0,                     # the +X ledge is cut away this wide under the USB socket (its shell tabs stick out below the PCB)
     textH=4.5, textGap=1.0, textZ=0.6, font='Arial',
     textTop='LOGIC', textBot='ANALYZER',
 )
@@ -110,6 +111,9 @@ def run(_context):
         for sy in (-1, 1):
             sk.sketchCurves.sketchCircles.addByCenterRadius(P3(c(sx * P['holeX'] + ox), c(sy * P['holeY']), 0), c(P['pinD'] / 2))
     extrude(base, all_profiles(sk), P['floorT'] + P['standoff'], P['pinH'], JOIN, [body])
+    sk = base.sketches.add(base.xYConstructionPlane)                  # relief in the +X ledge under the USB socket, down to the floor
+    rect(sk, Lc/2 + ox - P['ledgeD'] - 0.01, -P['usbReliefW']/2, Lc/2 + ox, P['usbReliefW']/2)
+    extrude(base, sk.profiles.item(0), P['floorT'], Hb - P['floorT'], CUT, [body])
     sk = base.sketches.add(base.xYConstructionPlane)
     rect(sk, Lc/2 + ox, -P['usbW']/2, Lo/2 + 1, P['usbW']/2)         # USB opening through the +X wall
     extrude(base, sk.profiles.item(0), zPcbTop - P['usbDown'], Hb, CUT, [body])
