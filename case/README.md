@@ -18,18 +18,18 @@ outside without entering the case.
 
 ## Board dimensions used
 
-From the official Nano 33 IoT datasheet (ABX00027, section 6 "Mechanical
-Information"):
-
-- PCB **43.16 × 17.77 × 1.6 mm** (the "45 × 18 mm" in shop listings includes
-  the USB connector overhang)
-- 4 mounting holes Ø 1.65 mm on a 40.64 × 15.24 mm grid, 1.26 mm from the edges
-- header rows 15.24 mm apart, 15 pins per row, first pin 3.81 mm from the end
+- PCB **45.5 × 18 × 1.6 mm**, measured on the board. The mechanical drawing in
+  the official datasheet (ABX00027, section 6) says 43.16 × 17.77 mm; a base
+  printed to that size was too short for the real board, so do not use it.
+- 4 mounting holes Ø 1.65 mm on the standard Nano 40.64 × 15.24 mm grid,
+  assumed centred on the board (2.43 mm from the ends). Not yet verified on a
+  print; if the locating pins miss the holes, cut them off and adjust `holeX`.
+- header rows 15.24 mm apart, 15 pins per row
 - micro-USB at the +X end, overhanging the PCB edge by ~1.6 mm, ~7.7 mm wide
 
 ## How the board is held
 
-- The PCB rests on two **end ledges** (2.6 mm wide, `ledgeD`) 3.5 mm above the
+- The PCB rests on two **end ledges** (3.8 mm wide, `ledgeD`) 3.5 mm above the
   floor (`standoff`), which clears untrimmed header tails on the underside.
 - Four **locating pins** Ø 1.3 × 1.4 mm (`pinD`, `pinH`) on the ledges go into
   the PCB's mounting holes from below. Drop the board onto them; this aligns the
@@ -40,7 +40,7 @@ Information"):
   and stop 0.3 mm above the PCB top (`bossGap`). They only limit lift, they do
   not clamp. They run through the lid, so the header slots end 0.7 mm short of
   the holes; the usable slot is 39.2 mm, 15 Dupont housings need 38.1 mm.
-- The board sits 0.4 mm off-centre towards the USB end (`ox` in the script,
+- The board sits 0.5 mm off-centre towards the USB end (`ox` in the script,
   derived from `clr`, `wall` and `usbOver`) so that the connector face is flush
   with the outer face of the base wall. The lid has no skirt on that end and its
   plate ends flush with the base wall, so the port is in the case face. The
@@ -52,10 +52,10 @@ Information"):
 
 ## Dimensions
 
-Base 47.2 × 21.8 × 12.2 mm, lid 49.0 × 25.4 × 5.6 mm (top 1.6 + skirt 4.0,
-1.6 thick, U-shaped: long sides and the far end), lid clearance 0.2 mm per side
-(`lidClear`, 0.3 if it is too tight). Assembled 49.0 × 25.4 × 13.8 mm. Pocket
-clearance around the PCB 0.4 mm per side (`clr`).
+Base 49.7 × 22.2 × 12.2 mm (pocket 46.5 × 19.0 mm), lid 51.5 × 25.8 × 5.6 mm
+(top 1.6 + skirt 4.0, 1.6 thick, U-shaped: long sides and the far end), lid
+clearance 0.2 mm per side (`lidClear`, 0.3 if it is too tight). Assembled
+51.5 × 25.8 × 13.8 mm. Pocket clearance around the PCB 0.5 mm per side (`clr`).
 
 ## Snap fit
 

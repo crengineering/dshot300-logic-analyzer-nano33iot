@@ -2,19 +2,21 @@ import adsk.core, adsk.fusion
 
 # ---- parameters (mm) -------------------------------------------------------
 P = dict(
-    # Arduino Nano 33 IoT, from the official datasheet (ABX00027, section 6):
-    # PCB 43.16 x 17.77 mm, 4 mounting holes d1.65 on a 40.64 x 15.24 mm grid,
-    # micro-USB overhangs the +X board end by ~1.6 mm, header rows 15.24 mm apart.
-    pcbL=43.16, pcbW=17.77, pcbT=1.6,
+    # Arduino Nano 33 IoT. Measured board: 45.5 x 18 mm (the datasheet drawing
+    # ABX00027 sec. 6 says 43.16 x 17.77 - a base printed to that size was too
+    # short for the real board). 4 mounting holes d1.65 on the standard Nano
+    # 40.64 x 15.24 mm grid, assumed centred (2.43 mm from the ends); micro-USB
+    # overhangs the +X board end by ~1.6 mm; header rows 15.24 mm apart.
+    pcbL=45.5, pcbW=18.0, pcbT=1.6,
     holeX=20.32, holeY=7.62, holeD=1.65,
-    clr=0.4,                             # pocket clearance around the PCB, per side
+    clr=0.5,                             # pocket clearance around the PCB, per side
     wall=1.6, floorT=1.6,
     standoff=3.5,                        # PCB underside above the floor (untrimmed header tails are ~3 mm)
     headroom=5.5,                        # lid underside above PCB top (USB overmold 7 mm centred at +1.4)
     lidT=1.6, skirtT=1.6, skirtH=4.0, lidClear=0.2,
     nubH=0.6, nubL=8.0, nubT=1.2, nubX=14.0, nubZ=1.5, nubClr=0.15,  # snap ridges on the long walls: proud, length, height, +-x centre, z above skirt bottom, groove clearance
     cornerR=2.0,
-    ledgeD=2.6,                          # end ledges under the PCB (must carry the locating pins)
+    ledgeD=3.8,                          # end ledges under the PCB (must carry the locating pins)
     pinD=1.3, pinH=1.4,                  # locating pins on the ledges, into the 4 PCB holes (hole d1.65, PCB 1.6 thick)
     bossW=2.2, bossIn=0.7, bossGap=0.3,  # lid bosses over the holes: width (y), reach inboard of the hole centre (x), gap above the PCB top
     rowPitch=15.24, slotW=3.2, slotL=41.0,
