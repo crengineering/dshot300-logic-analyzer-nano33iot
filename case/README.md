@@ -47,8 +47,9 @@ outside without entering the case.
   derived from `clr`, `wall` and `usbOver`) so that the connector face is flush
   with the outer face of the base wall. The lid has no skirt on that end and its
   plate ends flush with the base wall, so the port is in the case face. The
-  opening in the wall is 13 mm wide (`usbW`) from 2.5 mm below the PCB top
-  (`usbDown`) to the rim.
+  opening in the wall is 13 mm wide (`usbW`) and runs from the floor level
+  to the rim, so nothing sits below the socket; the lid plate closes it from
+  above.
 - Headers are assumed **pointing up**; Dupont housings go in from above through
   the lid slots (3.2 mm wide). With headers pointing down the lid does not fit;
   set `standoff` to ≥ 9 mm and drop the slots.

@@ -20,7 +20,7 @@ P = dict(
     pinD=1.3, pinH=1.4,                  # locating pins on the ledges, into the 4 PCB holes (hole d1.65, PCB 1.6 thick)
     bossW=2.2, bossIn=0.7, bossGap=0.3,  # lid bosses over the holes: width (y), reach inboard of the hole centre (x), gap above the PCB top
     rowPitch=15.24, slotW=3.2, slotL=41.0,
-    usbW=13.0, usbDown=2.5, usbOver=1.6, # notch width; notch bottom below PCB top; connector overhang beyond the PCB end
+    usbW=13.0, usbOver=1.6,              # notch width (notch runs from the floor level to the rim); connector overhang beyond the PCB end
     usbReliefW=11.0,                     # the +X ledge is cut away this wide under the USB socket (its shell tabs stick out below the PCB)
     textH=4.5, textGap=1.0, textZ=0.6, font='Arial',
     textTop='LOGIC', textBot='ANALYZER',
@@ -116,7 +116,7 @@ def run(_context):
     extrude(base, sk.profiles.item(0), P['floorT'], Hb - P['floorT'], CUT, [body])
     sk = base.sketches.add(base.xYConstructionPlane)
     rect(sk, Lc/2 + ox, -P['usbW']/2, Lo/2 + 1, P['usbW']/2)         # USB opening through the +X wall
-    extrude(base, sk.profiles.item(0), zPcbTop - P['usbDown'], Hb, CUT, [body])
+    extrude(base, sk.profiles.item(0), P['floorT'], Hb, CUT, [body])
     zNub = Hb - P['skirtH'] + P['nubZ']                                # snap ridges, 2 per long wall
     sk = base.sketches.add(base.xYConstructionPlane)
     for sx in (-1, 1):
