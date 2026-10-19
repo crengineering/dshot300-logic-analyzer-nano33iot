@@ -23,6 +23,9 @@ P = dict(
     usbW=13.0, usbOver=1.6,              # notch width (notch runs from the floor level to the rim); connector overhang beyond the PCB end
     usbReliefW=11.0,                     # the +X ledge is cut away this wide under the USB socket (its shell tabs stick out below the PCB)
     textH=4.5, textGap=1.0, textZ=0.6, font='Arial',
+    pinMarkH=3.0, pinMarkGap=0.4, gndDotD=1.8,   # pin marks beside the header slots: font size, gap to the slot, GND dot diameter
+    pinMarks=('T', '4', '3', '2', '1'),  # pins 1..5 from the USB end on the D12..D8 row (-Y): TLM, M4, M3, M2, M1
+    gndPins=((-1, 12), (1, 14)),         # (row sign, pin number from the USB end) of the two GND pins
     textTop='LOGIC', textBot='ANALYZER',
 )
 def c(mm): return mm / 10.0            # API works in cm
@@ -178,6 +181,28 @@ def run(_context):
         ef = lid.features.extrudeFeatures.addSimple(st, VI.createByReal(-c(P['textZ'])), NEW)
         for i in range(ef.bodies.count):
             b = ef.bodies.item(i); b.name = 'Label'; tools.add(b)
+    # pin marks: one character per pin beside the -Y slot (header pins sit one pitch inside the mounting holes)
+    pitch = 2.54
+    ym = P['rowPitch']/2 + P['slotW']/2 + P['pinMarkGap'] + P['pinMarkH']/2
+    hm = P['pinMarkH']
+    for k, txt in enumerate(P['pinMarks'], start=1):
+        xp = ox + P['holeX'] - pitch * k
+        ti = sk.sketchTexts.createInput2(txt, c(hm))
+        ti.setAsMultiLine(P3(c(xp - pitch/2), c(-ym - hm/2), 0), P3(c(xp + pitch/2), c(-ym + hm/2), 0),
+                          adsk.core.HorizontalAlignments.CenterHorizontalAlignment,
+                          adsk.core.VerticalAlignments.MiddleVerticalAlignment, 0)
+        ti.fontName = P['font']
+        ti.textStyle = adsk.fusion.TextStyles.TextStyleBold
+        st = sk.sketchTexts.add(ti)
+        ef = lid.features.extrudeFeatures.addSimple(st, VI.createByReal(-c(P['textZ'])), NEW)
+        for i in range(ef.bodies.count):
+            b = ef.bodies.item(i); b.name = 'Label'; tools.add(b)
+    skd = lid.sketches.add(plane)                                     # GND dots
+    for sy, k in P['gndPins']:
+        skd.sketchCurves.sketchCircles.addByCenterRadius(P3(c(ox + P['holeX'] - pitch * k), c(sy * ym), 0), c(P['gndDotD']/2))
+    ef = extrude(lid, all_profiles(skd), zTop - P['textZ'], P['textZ'], NEW)
+    for i in range(ef.bodies.count):
+        b = ef.bodies.item(i); b.name = 'Label'; tools.add(b)
     ci = lid.features.combineFeatures.createInput(lbody, tools)
     ci.operation = CUT; ci.isKeepToolBodies = True
     lid.features.combineFeatures.add(ci)

@@ -14,7 +14,7 @@ outside without entering the case.
 | **`la_case_bambu.3mf`** | **Bambu Studio project, ready to slice:** object "Lid" = part "Lid" (filament 1) + part "Label" (filament 2), lid already lying top-down on the bed; object "Base" next to it. File > Open Project. Presets: X2D 0.4 nozzle, 0.20 mm Standard, PLA |
 | `make_bambu_3mf.py` | builds `la_case_bambu.3mf` from the three STLs (`python make_bambu_3mf.py [template.3mf]`) |
 | `la_case.3mf` | raw Fusion export, every body separate (13 letters individually), fallback only |
-| `la_case_Base.stl`, `la_case_Lid.stl`, `la_case_Label.stl` | single bodies (Label = all 13 letters in one file). Fallback without the project file: import Lid + Label together, "load as one object with multiple parts", give the Label part the second filament |
+| `la_case_Base.stl`, `la_case_Lid.stl`, `la_case_Label.stl` | single bodies (Label = all 13 letters, the 5 pin marks and the 2 GND dots in one file). Fallback without the project file: import Lid + Label together, "load as one object with multiple parts", give the Label part the second filament |
 
 ## Board dimensions used
 
@@ -50,6 +50,12 @@ outside without entering the case.
   opening in the wall is 13 mm wide (`usbW`) and runs from the floor level
   to the rim, so nothing sits below the socket; the lid plate closes it from
   above.
+- **Pin marks** in the second filament beside the D12..D8 slot: `1 2 3 4 T`
+  for M1..M4 (D8..D11) and telemetry (D12), the T nearest the USB end, and a
+  dot at each of the two GND pins (12th and 14th pin from the USB end). With
+  the USB pointing away from you and the board component side up, the D12..D8
+  row is on the right; the lid's "LOGIC ANALYZER" reads correctly from that
+  side. Font size 3 mm bold (`pinMarkH`), dot Ø 1.8 mm (`gndDotD`).
 - Headers are assumed **pointing up**; Dupont housings go in from above through
   the lid slots (3.2 mm wide). With headers pointing down the lid does not fit;
   set `standoff` to ≥ 9 mm and drop the slots.
