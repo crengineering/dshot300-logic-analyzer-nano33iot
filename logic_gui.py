@@ -14,8 +14,8 @@ bidirectional DShot: idle high, low pulses, inverted CRC) and a UART 8N1 decoder
 with KISS-telemetry packet check (CRC-8, temperature/U/I/mAh/eRPM). Captures
 save/load as JSON.
 
-Development aid only — no verification evidence (QuadSE PLAN-001).
-Requires: pyserial, matplotlib, numpy (all present in the project's Python).
+Development aid, not a calibrated instrument.
+Requires: pyserial, matplotlib, numpy (pip install -r requirements.txt).
 """
 import bisect
 import json
@@ -26,11 +26,11 @@ import threading
 import time
 
 N_CH = 5
-DEFAULT_NAMES = ["M1 P22.1", "M2 P22.0", "M3 P22.2", "M4 P22.3", "ESC T"]
+DEFAULT_NAMES = ["M1", "M2", "M3", "M4", "TLM"]
 DEFAULT_DECODERS = ["DShot", "DShot", "DShot", "DShot", "UART"]
 DSHOT_BIT_US = 1e6 / 300e3          # 3.333 us
 GCR_BIT_US = DSHOT_BIT_US * 4 / 5    # 2.667 us: bidir reply runs at 5/4 of the command rate
-POLE_PAIRS = 7                       # X2216 12N14P (QuadSE dispatch SYS1-012 §6)
+POLE_PAIRS = 7                       # mechanical rpm = eRPM / pole pairs; 7 for the common 12N14P outrunners
 UART_BAUD = 115200
 
 
@@ -259,7 +259,7 @@ def describe_kiss(pkt):
     mah = (b[5] << 8) | b[6]
     erpm = ((b[7] << 8) | b[8]) * 100
     return (f"KISS {' '.join(f'{x:02X}' for x in b)}  CRC {'ok' if ok else 'FAIL'}  "
-            f"temp={temp} C U={u:.2f} V I={i:.2f} A mAh={mah} eRPM={erpm}  (U/I invalid on the G55M)" + note)
+            f"temp={temp} C U={u:.2f} V I={i:.2f} A mAh={mah} eRPM={erpm}" + note)
 
 
 # ----------------------------------------------------------------------------
@@ -292,7 +292,7 @@ def decode_gcr_reply(trans, t_start, t_limit, bit_us=GCR_BIT_US):
     """Decode one reply starting at the falling edge t_start (wire levels, line idles high).
 
     NRZI: an edge at slot boundary k (1..20) is a GCR 1, no edge a GCR 0. The ESC's clock is
-    its own (bench 2026-09-26: ~3.5 % faster than 5/4 x ours), so every interval between two
+    its own (measured ~3.5 % faster than 5/4 x ours on one AM32 ESC), so every interval between two
     edges is rounded on its own (GCR keeps it at 1..3 slots, the error cannot pile up), the
     bit time is then measured over the whole reply and the rounding repeated with it."""
     edges = [t for t, _ in trans if t_start < t < t_limit]
@@ -452,7 +452,7 @@ def selftest():
     ok &= not (len(fn) == 1 and fn[0].get("crc_ok", False))      # must not pass as a normal frame
 
     # bidir reply after that frame: stopped, a real period, an EDT temperature frame;
-    # ESC clock 5 % fast / 5 % slow (bench 2026-09-26 measured ~3.5 % fast)
+    # ESC clock 5 % fast / 5 % slow (one AM32 ESC measured ~3.5 % fast)
     cases = [(v, w, c) for v, w in ((0xFFF, 0), ((1 << 9) | 300, round(60e6 / 600)), ((0x2 << 8) | 35, None))
              for c in (0.95, 1.05)]
     for value12, want, clk in cases:

@@ -1,54 +1,76 @@
-# Gehäuse für den Logic Analyzer (Nano 33 IoT)
+# Case for the logic analyzer (Nano 33 IoT)
 
-Zweiteiliges Druckgehäuse für den 5-Kanal-Logic-Analyzer aus `../README.md`:
-Unterschale mit Board-Tasche und Kappe mit zwei Schlitzen über den Pin-Reihen,
-Schriftzug „LOGIC / ANALYZER“ 0,6 mm graviert und als eigener Körper für einen
-zweiten Filamentwechsel (AMS).
+Two-part printed case for the analyzer in `../README.md`: a base with a board
+pocket and a snap-on lid with two slots over the header rows, "LOGIC /
+ANALYZER" engraved 0.6 mm deep and exported as a separate body for a second
+filament (AMS colour change).
 
-| Datei | Inhalt |
+| File | Content |
 |---|---|
-| `fusion_case.py` | erzeugt das komplette Modell in Fusion (Skript ist die Quelle; Parameter im `P`-Dict oben, zusätzlich als Benutzerparameter im Dokument) |
-| `la_case.step` | Base + Lid + Buchstaben, mm |
-| **`la_case_bambu.3mf`** | **Bambu-Studio-Projekt, fertig zum Slicen:** Objekt „Lid“ = Teil „Lid“ (Filament 1) + Teil „Label“ (Filament 2), Kappe liegt schon mit der Oberseite auf dem Bett; Objekt „Base“ daneben. Datei > Projekt öffnen. Presets (X2D 0,4, 0.20 mm Standard, PLA) stammen aus `aurix_breakout.3mf`. |
-| `make_bambu_3mf.py` | erzeugt `la_case_bambu.3mf` aus den drei STLs (`python make_bambu_3mf.py [vorlage.3mf]`) |
-| `la_case.3mf` | roher Fusion-Export, alle Körper getrennt (13 Buchstaben einzeln) — nur Fallback |
-| `la_case_Base.stl`, `la_case_Lid.stl`, `la_case_Label.stl` | Einzelkörper (Label = alle 13 Buchstaben in einer Datei). Fallback ohne Projektdatei: Lid + Label zusammen importieren, „als ein Objekt mit mehreren Teilen laden“, dem Teil Label das zweite Filament geben |
+| `fusion_case.py` | generates the whole model in Fusion 360 (the script is the source; parameters in the `P` dict at the top, also created as user parameters in the document) |
+| `la_case.step` | Base + Lid + letters, mm |
+| **`la_case_bambu.3mf`** | **Bambu Studio project, ready to slice:** object "Lid" = part "Lid" (filament 1) + part "Label" (filament 2), lid already lying top-down on the bed; object "Base" next to it. File > Open Project. Presets: X2D 0.4 nozzle, 0.20 mm Standard, PLA |
+| `make_bambu_3mf.py` | builds `la_case_bambu.3mf` from the three STLs (`python make_bambu_3mf.py [template.3mf]`) |
+| `la_case.3mf` | raw Fusion export, every body separate (13 letters individually), fallback only |
+| `la_case_Base.stl`, `la_case_Lid.stl`, `la_case_Label.stl` | single bodies (Label = all 13 letters in one file). Fallback without the project file: import Lid + Label together, "load as one object with multiple parts", give the Label part the second filament |
 
-## Annahmen (bitte am Board prüfen)
+## Board dimensions used
 
-- Nano 33 IoT **mit nach oben stehenden Stiftleisten**, Dupont-Buchsen werden von
-  oben durch die Kappenschlitze gesteckt (Schlitz 3,2 mm breit, Buchse 2,54 mm).
-  Bei Pins nach unten passt die Kappe nicht — dann `standoff` auf ≥ 9 mm und die
-  Schlitze entfallen.
-- Board 45 × 18 × 1,6 mm, Pin-Reihen 15,24 mm auseinander, mittig über die Länge.
-- Micro-USB am +X-Ende, Stecker-Umspritzung ≤ 12 × 7 mm.
-- Unterseite an beiden Board-Enden 2 mm breit frei (Auflageleisten).
-- Die vier Niederhalter der Kappe (1,6 × 2,2 mm) sitzen auf den Board-Ecken —
-  Reset-Taster am USB-Ende auf Kollision prüfen.
+From the official Nano 33 IoT datasheet (ABX00027, section 6 "Mechanical
+Information"):
 
-## Maße
+- PCB **43.16 × 17.77 × 1.6 mm** (the "45 × 18 mm" in shop listings includes
+  the USB connector overhang)
+- 4 mounting holes Ø 1.65 mm on a 40.64 × 15.24 mm grid, 1.26 mm from the edges
+- header rows 15.24 mm apart, 15 pins per row, first pin 3.81 mm from the end
+- micro-USB at the +X end, overhanging the PCB edge by ~1.6 mm, ~7.7 mm wide
 
-Base 49 × 22 × 11,2 mm, Kappe 52,6 × 25,6 × 5,6 mm (Deckel 1,6 + Schürze 4,0 ×
-1,6 dick), Kappenspiel 0,2 mm je Seite (Parameter `lidClear`, bei zu strammem
-Sitz auf 0,3).
+## How the board is held
 
-## Rastung
+- The PCB rests on two **end ledges** (2.6 mm wide, `ledgeD`) 3.5 mm above the
+  floor (`standoff`), which clears untrimmed header tails on the underside.
+- Four **locating pins** Ø 1.3 × 1.4 mm (`pinD`, `pinH`) on the ledges go into
+  the PCB's mounting holes from below. Drop the board onto them; this aligns the
+  USB connector with the notch before the lid goes on. If the pins are too
+  tight, sand them or set `pinD` to 1.2.
+- Four **bosses** on the lid underside (2.2 mm wide, `bossW`) sit over the hole
+  positions, from 0.7 mm inboard of the hole centre (`bossIn`) to the PCB end,
+  and stop 0.3 mm above the PCB top (`bossGap`). They only limit lift, they do
+  not clamp. They run through the lid, so the header slots end 0.7 mm short of
+  the holes; the usable slot is 39.2 mm, 15 Dupont housings need 38.1 mm.
+- Headers are assumed **pointing up**; Dupont housings go in from above through
+  the lid slots (3.2 mm wide). With headers pointing down the lid does not fit;
+  set `standoff` to ≥ 9 mm and drop the slots.
 
-Je zwei Wülste 8 × 1,2 mm, 0,6 mm hoch, mit 45°-Anlaufschrägen auf den langen
-Außenwänden der Unterschale (bei x = ±14 mm, 1,5 mm über der Schürzenunterkante),
-dazu Nuten mit 0,15 mm Spiel innen in der Schürze. Die Kappe rastet mit 0,4 mm
-Überdeckung ein. Rastet sie zu schwer, `nubH` auf 0,5 setzen; zu leicht, `nubClr`
-auf 0,1. Parameter `nubH nubL nubT nubX nubZ nubClr`.
+## Dimensions
 
-## Drucken
+Base 47.2 × 21.8 × 12.2 mm, lid 50.8 × 25.4 × 5.6 mm (top 1.6 + skirt 4.0,
+1.6 thick), lid clearance 0.2 mm per side (`lidClear`, 0.3 if it is too tight).
+Assembled height 13.8 mm. Pocket clearance around the PCB 0.4 mm per side
+(`clr`). USB notch 13 mm wide (`usbW`), from 2.5 mm below the PCB top to the
+rim (`usbDown`), matched by a notch in the lid skirt.
 
-- Base: Öffnung nach oben, wie exportiert.
-- Kappe: **Oberseite auf das Druckbett** (in Bambu Studio „Auf Fläche legen“),
-  dann sind Gravur und Farbwechsel sauber und die Niederhalter zeigen nach oben.
-- 0,2 mm Schichten, 2–3 Wände, keine Stützen nötig.
+## Snap fit
 
-## Neu erzeugen
+Two ridges 8 × 1.2 mm, 0.6 mm proud, with 45° lead-in chamfers on each long
+outer wall of the base (at x = ±14 mm, 1.5 mm above the skirt's lower edge),
+and grooves with 0.15 mm clearance inside the skirt. The lid snaps in with
+0.4 mm overlap. Too stiff: `nubH` 0.5; too loose: `nubClr` 0.1. Parameters
+`nubH nubL nubT nubX nubZ nubClr`.
 
-Fusion + Fusion-MCP-Add-in laufen lassen, `P` im Skript anpassen, Skript über
-den MCP (`fusion_mcp_execute`, `featureType: script`) ausführen. Es legt jedes
-Mal ein neues, ungespeichertes Dokument an.
+## Printing
+
+- Base: opening up, as exported. The locating pins print as small vertical
+  cylinders; no supports.
+- Lid: **top face on the bed** ("Place on face" in Bambu Studio), so the
+  engraving and the colour change come out clean and the bosses point up.
+- 0.2 mm layers, 2–3 walls, no supports.
+
+## Regenerating
+
+Run `fusion_case.py` as a script in Fusion 360 (Utilities > Scripts and
+Add-Ins > + > pick the file > Run; with the Fusion MCP add-in it can also be run
+straight from Claude Code). It creates a new, unsaved document each
+time. Then export Base, Lid and the Label bodies as STL (mm) and the whole
+design as STEP into this folder, and run `python make_bambu_3mf.py` (pass the
+previous `la_case_bambu.3mf` as the template to keep the printer presets).

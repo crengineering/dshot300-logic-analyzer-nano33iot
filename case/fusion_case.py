@@ -2,18 +2,23 @@ import adsk.core, adsk.fusion
 
 # ---- parameters (mm) -------------------------------------------------------
 P = dict(
-    pcbL=45.0, pcbW=18.0, pcbT=1.6,      # Arduino Nano 33 IoT
+    # Arduino Nano 33 IoT, from the official datasheet (ABX00027, section 6):
+    # PCB 43.16 x 17.77 mm, 4 mounting holes d1.65 on a 40.64 x 15.24 mm grid,
+    # micro-USB overhangs the +X board end by ~1.6 mm, header rows 15.24 mm apart.
+    pcbL=43.16, pcbW=17.77, pcbT=1.6,
+    holeX=20.32, holeY=7.62, holeD=1.65,
     clr=0.4,                             # pocket clearance around the PCB, per side
     wall=1.6, floorT=1.6,
-    standoff=2.5,                        # PCB underside above the floor (solder stubs)
+    standoff=3.5,                        # PCB underside above the floor (untrimmed header tails are ~3 mm)
     headroom=5.5,                        # lid underside above PCB top (USB overmold 7 mm centred at +1.4)
     lidT=1.6, skirtT=1.6, skirtH=4.0, lidClear=0.2,
     nubH=0.6, nubL=8.0, nubT=1.2, nubX=14.0, nubZ=1.5, nubClr=0.15,  # snap ridges on the long walls: proud, length, height, +-x centre, z above skirt bottom, groove clearance
     cornerR=2.0,
-    ledgeD=2.0,                          # end ledges under the PCB
-    postX=1.6, postY=2.2,                # hold-down posts on the PCB corners
+    ledgeD=2.6,                          # end ledges under the PCB (must carry the locating pins)
+    pinD=1.3, pinH=1.4,                  # locating pins on the ledges, into the 4 PCB holes (hole d1.65, PCB 1.6 thick)
+    bossW=2.2, bossIn=0.7, bossGap=0.3,  # lid bosses over the holes: width (y), reach inboard of the hole centre (x), gap above the PCB top
     rowPitch=15.24, slotW=3.2, slotL=41.0,
-    usbW=12.0, usbDown=2.5,              # notch width; notch bottom below PCB top
+    usbW=13.0, usbDown=2.5, usbOver=1.6, # notch width; notch bottom below PCB top; connector overhang (info)
     textH=4.5, textGap=1.0, textZ=0.6, font='Arial',
     textTop='LOGIC', textBot='ANALYZER',
 )
@@ -97,8 +102,13 @@ def run(_context):
     sk = base.sketches.add(base.xYConstructionPlane)
     rect(sk, -Lc/2, -Wc/2, -Lc/2 + P['ledgeD'], Wc/2); rect(sk, Lc/2 - P['ledgeD'], -Wc/2, Lc/2, Wc/2)
     extrude(base, all_profiles(sk), 0, P['floorT'] + P['standoff'], JOIN, [body])
+    sk = base.sketches.add(base.xYConstructionPlane)                  # locating pins into the PCB holes
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            sk.sketchCurves.sketchCircles.addByCenterRadius(P3(c(sx * P['holeX']), c(sy * P['holeY']), 0), c(P['pinD'] / 2))
+    extrude(base, all_profiles(sk), P['floorT'] + P['standoff'], P['pinH'], JOIN, [body])
     sk = base.sketches.add(base.xYConstructionPlane)
-    rect(sk, Lc/2, -P['usbW']/2, Lo/2 + 1, P['usbW']/2)              # USB notch, +X end
+    rect(sk, Lc/2, -P['usbW']/2, Lo/2 + 1, P['usbW']/2)              # USB notch, +X end (connector overhangs the PCB by usbOver)
     extrude(base, sk.profiles.item(0), zPcbTop - P['usbDown'], Hb, CUT, [body])
     zNub = Hb - P['skirtH'] + P['nubZ']                                # snap ridges, 2 per long wall
     sk = base.sketches.add(base.xYConstructionPlane)
@@ -132,17 +142,17 @@ def run(_context):
     sk = lid.sketches.add(lid.xYConstructionPlane)
     rect(sk, Lo/2 - 0.5, -P['usbW']/2, Ll/2 + 1, P['usbW']/2)        # skirt notch over the USB
     extrude(lid, sk.profiles.item(0), Hb - P['skirtH'], P['skirtH'], CUT, [lbody])
-    sk = lid.sketches.add(lid.xYConstructionPlane)                    # 4 hold-down posts
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            x0, x1 = sorted([sx * P['pcbL']/2, sx * (P['pcbL']/2 - P['postX'])])
-            y0, y1 = sorted([sy * P['pcbW']/2, sy * (P['pcbW']/2 - P['postY'])])
-            rect(sk, x0, y0, x1, y1)
-    extrude(lid, all_profiles(sk), zPcbTop + 0.2, Hb - zPcbTop - 0.2 + 0.01, JOIN, [lbody])
     sk = lid.sketches.add(lid.xYConstructionPlane)                    # header slots
     for sy in (-1, 1):
         rect(sk, -P['slotL']/2, sy * P['rowPitch']/2 - P['slotW']/2, P['slotL']/2, sy * P['rowPitch']/2 + P['slotW']/2)
     extrude(lid, all_profiles(sk), Hb - 0.5, P['lidT'] + 1, CUT, [lbody])
+    sk = lid.sketches.add(lid.xYConstructionPlane)                    # 4 hold-down bosses: hole centre to the PCB end
+    for sx in (-1, 1):                                                # (run through the lid: they overlap the slot ends;
+        for sy in (-1, 1):                                            #  slot stays free from -19.6 to +19.6, headers need 38.1)
+            x0, x1 = sorted([sx * (P['holeX'] - P['bossIn']), sx * P['pcbL']/2])
+            y0, y1 = sorted([sy * (P['holeY'] - P['bossW']/2), sy * (P['holeY'] + P['bossW']/2)])
+            rect(sk, x0, y0, x1, y1)
+    extrude(lid, all_profiles(sk), zPcbTop + P['bossGap'], Hb + P['lidT'] - zPcbTop - P['bossGap'], JOIN, [lbody])
 
     # ---- Label (engraved, separate body for a second filament) ------------------
     zTop = Hb + P['lidT']
