@@ -18,7 +18,7 @@ P = dict(
     pinD=1.3, pinH=1.4,                  # locating pins on the ledges, into the 4 PCB holes (hole d1.65, PCB 1.6 thick)
     bossW=2.2, bossIn=0.7, bossGap=0.3,  # lid bosses over the holes: width (y), reach inboard of the hole centre (x), gap above the PCB top
     rowPitch=15.24, slotW=3.2, slotL=41.0,
-    usbW=13.0, usbDown=2.5, usbOver=1.6, # notch width; notch bottom below PCB top; connector overhang (info)
+    usbW=13.0, usbDown=2.5, usbOver=1.6, # notch width; notch bottom below PCB top; connector overhang beyond the PCB end
     textH=4.5, textGap=1.0, textZ=0.6, font='Arial',
     textTop='LOGIC', textBot='ANALYZER',
 )
@@ -87,6 +87,7 @@ def run(_context):
     zPcbTop = P['floorT'] + P['standoff'] + P['pcbT']
     Ll = Lo + 2 * (P['lidClear'] + P['skirtT']); Wl = Wo + 2 * (P['lidClear'] + P['skirtT'])
     Li = Lo + 2 * P['lidClear'];                 Wi = Wo + 2 * P['lidClear']
+    ox = P['clr'] + P['wall'] - P['usbOver']    # board offset in +X: USB connector face flush with the case end
     NEW, JOIN, CUT = (adsk.fusion.FeatureOperations.NewBodyFeatureOperation,
                       adsk.fusion.FeatureOperations.JoinFeatureOperation,
                       adsk.fusion.FeatureOperations.CutFeatureOperation)
@@ -97,18 +98,18 @@ def run(_context):
     sk = base.sketches.add(base.xYConstructionPlane); rect(sk, -Lo/2, -Wo/2, Lo/2, Wo/2)
     body = extrude(base, sk.profiles.item(0), 0, Hb, NEW).bodies.item(0); body.name = 'Base'
     fillet(base, vertical_edges(body), P['cornerR'])
-    sk = base.sketches.add(base.xYConstructionPlane); rect(sk, -Lc/2, -Wc/2, Lc/2, Wc/2)
+    sk = base.sketches.add(base.xYConstructionPlane); rect(sk, -Lc/2 + ox, -Wc/2, Lc/2 + ox, Wc/2)
     extrude(base, sk.profiles.item(0), P['floorT'], Hb - P['floorT'], CUT, [body])
     sk = base.sketches.add(base.xYConstructionPlane)
-    rect(sk, -Lc/2, -Wc/2, -Lc/2 + P['ledgeD'], Wc/2); rect(sk, Lc/2 - P['ledgeD'], -Wc/2, Lc/2, Wc/2)
+    rect(sk, -Lc/2 + ox, -Wc/2, -Lc/2 + ox + P['ledgeD'], Wc/2); rect(sk, Lc/2 + ox - P['ledgeD'], -Wc/2, Lc/2 + ox, Wc/2)
     extrude(base, all_profiles(sk), 0, P['floorT'] + P['standoff'], JOIN, [body])
     sk = base.sketches.add(base.xYConstructionPlane)                  # locating pins into the PCB holes
     for sx in (-1, 1):
         for sy in (-1, 1):
-            sk.sketchCurves.sketchCircles.addByCenterRadius(P3(c(sx * P['holeX']), c(sy * P['holeY']), 0), c(P['pinD'] / 2))
+            sk.sketchCurves.sketchCircles.addByCenterRadius(P3(c(sx * P['holeX'] + ox), c(sy * P['holeY']), 0), c(P['pinD'] / 2))
     extrude(base, all_profiles(sk), P['floorT'] + P['standoff'], P['pinH'], JOIN, [body])
     sk = base.sketches.add(base.xYConstructionPlane)
-    rect(sk, Lc/2, -P['usbW']/2, Lo/2 + 1, P['usbW']/2)              # USB notch, +X end (connector overhangs the PCB by usbOver)
+    rect(sk, Lc/2 + ox, -P['usbW']/2, Lo/2 + 1, P['usbW']/2)         # USB opening through the +X wall
     extrude(base, sk.profiles.item(0), zPcbTop - P['usbDown'], Hb, CUT, [body])
     zNub = Hb - P['skirtH'] + P['nubZ']                                # snap ridges, 2 per long wall
     sk = base.sketches.add(base.xYConstructionPlane)
@@ -123,15 +124,15 @@ def run(_context):
     # ---- Lid ----------------------------------------------------------------
     lidOcc = root.occurrences.addNewComponent(adsk.core.Matrix3D.create())
     lid = lidOcc.component
-    sk = lid.sketches.add(lid.xYConstructionPlane); rect(sk, -Ll/2, -Wl/2, Ll/2, Wl/2)
+    sk = lid.sketches.add(lid.xYConstructionPlane); rect(sk, -Ll/2, -Wl/2, Lo/2, Wl/2)   # plate ends flush with the base wall at the USB end
     lbody = extrude(lid, sk.profiles.item(0), Hb, P['lidT'], NEW).bodies.item(0); lbody.name = 'Lid'
-    sk = lid.sketches.add(lid.xYConstructionPlane)
-    rect(sk, -Ll/2, -Wl/2, Ll/2, Wl/2); rect(sk, -Li/2, -Wi/2, Li/2, Wi/2)
-    ring = [sk.profiles.item(i) for i in range(sk.profiles.count) if sk.profiles.item(i).profileLoops.count == 2][0]
-    extrude(lid, ring, Hb - P['skirtH'], P['skirtH'], JOIN, [lbody])
+    sk = lid.sketches.add(lid.xYConstructionPlane)                    # U-shaped skirt: long sides + the -X end, open at the USB end
+    rect(sk, -Li/2, Wi/2, Lo/2, Wl/2); rect(sk, -Li/2, -Wl/2, Lo/2, -Wi/2); rect(sk, -Ll/2, -Wl/2, -Li/2, Wl/2)
+    extrude(lid, all_profiles(sk), Hb - P['skirtH'], P['skirtH'], JOIN, [lbody])
     xin = Li/2 + P['skirtT']/2
-    fillet(lid, vertical_edges(lbody, lambda x, y: abs(x) > xin), P['cornerR'] + P['lidClear'] + P['skirtT'])
-    fillet(lid, vertical_edges(lbody, lambda x, y: abs(x) < xin), P['cornerR'] + P['lidClear'])
+    fillet(lid, vertical_edges(lbody, lambda x, y: x < -xin), P['cornerR'] + P['lidClear'] + P['skirtT'])
+    fillet(lid, vertical_edges(lbody, lambda x, y: -xin < x < 0), P['cornerR'] + P['lidClear'])
+    fillet(lid, vertical_edges(lbody, lambda x, y: x > 0 and abs(y) > Wi/2 + 0.01), P['cornerR'])
     sk = lid.sketches.add(lid.xYConstructionPlane)                    # grooves for the snap ridges
     for sx in (-1, 1):
         for sy in (-1, 1):
@@ -139,17 +140,14 @@ def run(_context):
             y0, y1 = sorted([sy * (Wi/2 - 0.05), sy * (Wi/2 + P['nubH'] + P['nubClr'])])
             rect(sk, x0, y0, x1, y1)
     extrude(lid, all_profiles(sk), zNub - P['nubClr'], P['nubT'] + 2 * P['nubClr'], CUT, [lbody])
-    sk = lid.sketches.add(lid.xYConstructionPlane)
-    rect(sk, Lo/2 - 0.5, -P['usbW']/2, Ll/2 + 1, P['usbW']/2)        # skirt notch over the USB
-    extrude(lid, sk.profiles.item(0), Hb - P['skirtH'], P['skirtH'], CUT, [lbody])
     sk = lid.sketches.add(lid.xYConstructionPlane)                    # header slots
     for sy in (-1, 1):
-        rect(sk, -P['slotL']/2, sy * P['rowPitch']/2 - P['slotW']/2, P['slotL']/2, sy * P['rowPitch']/2 + P['slotW']/2)
+        rect(sk, -P['slotL']/2 + ox, sy * P['rowPitch']/2 - P['slotW']/2, P['slotL']/2 + ox, sy * P['rowPitch']/2 + P['slotW']/2)
     extrude(lid, all_profiles(sk), Hb - 0.5, P['lidT'] + 1, CUT, [lbody])
     sk = lid.sketches.add(lid.xYConstructionPlane)                    # 4 hold-down bosses: hole centre to the PCB end
     for sx in (-1, 1):                                                # (run through the lid: they overlap the slot ends;
         for sy in (-1, 1):                                            #  slot stays free from -19.6 to +19.6, headers need 38.1)
-            x0, x1 = sorted([sx * (P['holeX'] - P['bossIn']), sx * P['pcbL']/2])
+            x0, x1 = sorted([sx * (P['holeX'] - P['bossIn']) + ox, sx * P['pcbL']/2 + ox])
             y0, y1 = sorted([sy * (P['holeY'] - P['bossW']/2), sy * (P['holeY'] + P['bossW']/2)])
             rect(sk, x0, y0, x1, y1)
     extrude(lid, all_profiles(sk), zPcbTop + P['bossGap'], Hb + P['lidT'] - zPcbTop - P['bossGap'], JOIN, [lbody])
@@ -165,7 +163,7 @@ def run(_context):
     tools = adsk.core.ObjectCollection.create()
     for txt, yc in ((P['textTop'], (h + g)/2), (P['textBot'], -(h + g)/2)):
         ti = sk.sketchTexts.createInput2(txt, c(h))
-        ti.setAsMultiLine(P3(c(-boxL), c(yc - h/2), 0), P3(c(boxL), c(yc + h/2), 0),
+        ti.setAsMultiLine(P3(c(ox - boxL), c(yc - h/2), 0), P3(c(ox + boxL), c(yc + h/2), 0),
                           adsk.core.HorizontalAlignments.CenterHorizontalAlignment,
                           adsk.core.VerticalAlignments.MiddleVerticalAlignment, 0)
         ti.fontName = P['font']

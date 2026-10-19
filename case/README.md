@@ -3,7 +3,9 @@
 Two-part printed case for the analyzer in `../README.md`: a base with a board
 pocket and a snap-on lid with two slots over the header rows, "LOGIC /
 ANALYZER" engraved 0.6 mm deep and exported as a separate body for a second
-filament (AMS colour change).
+filament (AMS colour change). The USB end of the case is open: the Nano's
+micro-USB face sits flush with the case end, so the cable plugs in from
+outside without entering the case.
 
 | File | Content |
 |---|---|
@@ -38,24 +40,30 @@ Information"):
   and stop 0.3 mm above the PCB top (`bossGap`). They only limit lift, they do
   not clamp. They run through the lid, so the header slots end 0.7 mm short of
   the holes; the usable slot is 39.2 mm, 15 Dupont housings need 38.1 mm.
+- The board sits 0.4 mm off-centre towards the USB end (`ox` in the script,
+  derived from `clr`, `wall` and `usbOver`) so that the connector face is flush
+  with the outer face of the base wall. The lid has no skirt on that end and its
+  plate ends flush with the base wall, so the port is in the case face. The
+  opening in the wall is 13 mm wide (`usbW`) from 2.5 mm below the PCB top
+  (`usbDown`) to the rim.
 - Headers are assumed **pointing up**; Dupont housings go in from above through
   the lid slots (3.2 mm wide). With headers pointing down the lid does not fit;
   set `standoff` to ≥ 9 mm and drop the slots.
 
 ## Dimensions
 
-Base 47.2 × 21.8 × 12.2 mm, lid 50.8 × 25.4 × 5.6 mm (top 1.6 + skirt 4.0,
-1.6 thick), lid clearance 0.2 mm per side (`lidClear`, 0.3 if it is too tight).
-Assembled height 13.8 mm. Pocket clearance around the PCB 0.4 mm per side
-(`clr`). USB notch 13 mm wide (`usbW`), from 2.5 mm below the PCB top to the
-rim (`usbDown`), matched by a notch in the lid skirt.
+Base 47.2 × 21.8 × 12.2 mm, lid 49.0 × 25.4 × 5.6 mm (top 1.6 + skirt 4.0,
+1.6 thick, U-shaped: long sides and the far end), lid clearance 0.2 mm per side
+(`lidClear`, 0.3 if it is too tight). Assembled 49.0 × 25.4 × 13.8 mm. Pocket
+clearance around the PCB 0.4 mm per side (`clr`).
 
 ## Snap fit
 
 Two ridges 8 × 1.2 mm, 0.6 mm proud, with 45° lead-in chamfers on each long
 outer wall of the base (at x = ±14 mm, 1.5 mm above the skirt's lower edge),
 and grooves with 0.15 mm clearance inside the skirt. The lid snaps in with
-0.4 mm overlap. Too stiff: `nubH` 0.5; too loose: `nubClr` 0.1. Parameters
+0.4 mm overlap; the grooves also locate the lid lengthwise, since it has no
+skirt at the USB end. Too stiff: `nubH` 0.5; too loose: `nubClr` 0.1. Parameters
 `nubH nubL nubT nubX nubZ nubClr`.
 
 ## Printing
