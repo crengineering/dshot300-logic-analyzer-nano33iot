@@ -52,10 +52,11 @@ outside without entering the case.
   above.
 - **Pin marks** in the second filament beside the D12..D8 slot: `1 2 3 4 T`
   for M1..M4 (D8..D11) and telemetry (D12), the T nearest the USB end, and a
-  dot at each of the two GND pins (12th and 14th pin from the USB end). With
-  the USB pointing away from you and the board component side up, the D12..D8
-  row is on the right; the lid's "LOGIC ANALYZER" reads correctly from that
-  side. Font size 3 mm bold (`pinMarkH`), dot Ø 1.8 mm (`gndDotD`).
+  dot at each of the two GND pins (12th pin from the USB end on the marked
+  row, 14th on the other). Reading "LOGIC ANALYZER" with the USB end on the
+  right, the marks are on the far row (`markRow`, +1; set -1 to swap rows).
+  Glyphs 2.6 mm bold (`pinMarkH`), dot Ø 1.8 mm (`gndDotD`), centred between
+  slot and lid edge.
 - Headers are assumed **pointing up**; Dupont housings go in from above through
   the lid slots (3.2 mm wide). With headers pointing down the lid does not fit;
   set `standoff` to ≥ 9 mm and drop the slots.

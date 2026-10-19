@@ -23,9 +23,9 @@ P = dict(
     usbW=13.0, usbOver=1.6,              # notch width (notch runs from the floor level to the rim); connector overhang beyond the PCB end
     usbReliefW=11.0,                     # the +X ledge is cut away this wide under the USB socket (its shell tabs stick out below the PCB)
     textH=4.5, textGap=1.0, textZ=0.6, font='Arial',
-    pinMarkH=3.0, pinMarkGap=0.4, gndDotD=1.8,   # pin marks beside the header slots: font size, gap to the slot, GND dot diameter
-    pinMarks=('T', '4', '3', '2', '1'),  # pins 1..5 from the USB end on the D12..D8 row (-Y): TLM, M4, M3, M2, M1
-    gndPins=((-1, 12), (1, 14)),         # (row sign, pin number from the USB end) of the two GND pins
+    pinMarkH=2.6, gndDotD=1.8,           # pin marks beside the header slots: glyph height, GND dot diameter (both centred between slot and lid edge)
+    pinMarks=('T', '4', '3', '2', '1'),  # pins 1..5 from the USB end on the D12..D8 row: TLM, M4, M3, M2, M1
+    markRow=1,                           # which row (+1/-1 in Y) carries D12..D8; the GND dot of that row is pin 12, of the other row pin 14
     textTop='LOGIC', textBot='ANALYZER',
 )
 def c(mm): return mm / 10.0            # API works in cm
@@ -181,14 +181,14 @@ def run(_context):
         ef = lid.features.extrudeFeatures.addSimple(st, VI.createByReal(-c(P['textZ'])), NEW)
         for i in range(ef.bodies.count):
             b = ef.bodies.item(i); b.name = 'Label'; tools.add(b)
-    # pin marks: one character per pin beside the -Y slot (header pins sit one pitch inside the mounting holes)
+    # pin marks: one character per pin beside the D12..D8 slot (header pins sit one pitch inside the mounting holes)
     pitch = 2.54
-    ym = P['rowPitch']/2 + P['slotW']/2 + P['pinMarkGap'] + P['pinMarkH']/2
+    ym = (P['rowPitch']/2 + P['slotW']/2 + Wl/2) / 2                 # centre of the strip between slot edge and lid edge
     hm = P['pinMarkH']
     for k, txt in enumerate(P['pinMarks'], start=1):
         xp = ox + P['holeX'] - pitch * k
         ti = sk.sketchTexts.createInput2(txt, c(hm))
-        ti.setAsMultiLine(P3(c(xp - pitch/2), c(-ym - hm/2), 0), P3(c(xp + pitch/2), c(-ym + hm/2), 0),
+        ti.setAsMultiLine(P3(c(xp - pitch/2), c(P['markRow'] * ym - hm/2), 0), P3(c(xp + pitch/2), c(P['markRow'] * ym + hm/2), 0),
                           adsk.core.HorizontalAlignments.CenterHorizontalAlignment,
                           adsk.core.VerticalAlignments.MiddleVerticalAlignment, 0)
         ti.fontName = P['font']
@@ -198,9 +198,10 @@ def run(_context):
         for i in range(ef.bodies.count):
             b = ef.bodies.item(i); b.name = 'Label'; tools.add(b)
     skd = lid.sketches.add(plane)                                     # GND dots
-    for sy, k in P['gndPins']:
-        skd.sketchCurves.sketchCircles.addByCenterRadius(P3(c(ox + P['holeX'] - pitch * k), c(sy * ym), 0), c(P['gndDotD']/2))
-    ef = extrude(lid, all_profiles(skd), zTop - P['textZ'], P['textZ'], NEW)
+    yd = ym
+    for sy, k in ((P['markRow'], 12), (-P['markRow'], 14)):
+        skd.sketchCurves.sketchCircles.addByCenterRadius(P3(c(ox + P['holeX'] - pitch * k), c(sy * yd), 0), c(P['gndDotD']/2))
+    ef = lid.features.extrudeFeatures.addSimple(all_profiles(skd), VI.createByReal(-c(P['textZ'])), NEW)   # sketch is on the top plane: extrude down
     for i in range(ef.bodies.count):
         b = ef.bodies.item(i); b.name = 'Label'; tools.add(b)
     ci = lid.features.combineFeatures.createInput(lbody, tools)
