@@ -5,6 +5,8 @@ lines plus the ESC telemetry wire, sampled at ~10 MSa/s (~100 ns resolution),
 with decoders for DShot frames, bidirectional DShot replies and KISS/UART
 telemetry. Development aid, not a calibrated instrument.
 
+![GUI: four bidirectional DShot300 lines with decoded frames and ESC replies](GUI_screenshot_bidirectional_dshot.png)
+
 | Part | What |
 |---|---|
 | `logic_nano33iot/logic_nano33iot.ino` | Nano 33 IoT sketch: samples 5 pins at ~10 MSa/s into RAM, streams run-length data over USB |
