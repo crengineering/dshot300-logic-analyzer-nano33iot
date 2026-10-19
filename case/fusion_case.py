@@ -22,6 +22,7 @@ P = dict(
     rowPitch=15.24, slotW=3.2, slotL=41.0,
     usbW=13.0, usbDown=2.5, usbOver=1.6, # notch width; notch bottom below PCB top; connector overhang beyond the PCB end
     usbReliefW=11.0,                     # the +X ledge is cut away this wide under the USB socket (its shell tabs stick out below the PCB)
+    usbLidD=3.0,                         # notch in the lid plate at the USB end, this deep from the lid edge, between the +X bosses
     textH=4.5, textGap=1.0, textZ=0.6, font='Arial',
     textTop='LOGIC', textBot='ANALYZER',
 )
@@ -157,6 +158,9 @@ def run(_context):
             y0, y1 = sorted([sy * (P['holeY'] - P['bossW']/2), sy * (P['holeY'] + P['bossW']/2)])
             rect(sk, x0, y0, x1, y1)
     extrude(lid, all_profiles(sk), zPcbTop + P['bossGap'], Hb + P['lidT'] - zPcbTop - P['bossGap'], JOIN, [lbody])
+    yn = P['holeY'] - P['bossW']/2                                    # notch in the lid plate over the USB opening, flush with the boss inner faces
+    sk = lid.sketches.add(lid.xYConstructionPlane); rect(sk, Lo/2 - P['usbLidD'], -yn, Lo/2 + 1, yn)
+    extrude(lid, sk.profiles.item(0), Hb - 0.5, P['lidT'] + 1, CUT, [lbody])
 
     # ---- Label (engraved, separate body for a second filament) ------------------
     zTop = Hb + P['lidT']
